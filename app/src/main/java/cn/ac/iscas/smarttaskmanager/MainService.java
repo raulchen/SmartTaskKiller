@@ -1,6 +1,8 @@
 package cn.ac.iscas.smarttaskmanager;
 
+import android.app.ActivityManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
@@ -20,7 +22,8 @@ public class MainService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        new Thread(new TaskManagerRunnable()).start();
+        ActivityManager am = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
+        new Thread(new TaskManagerRunnable(am)).start();
         return super.onStartCommand(intent, flags, startId);
     }
 
