@@ -12,7 +12,7 @@ public class TaskManagerRunnable implements Runnable {
     @Override
     public void run() {
         while(true){
-            Log.d(LOG_TAG, "hehe");
+            Log.d(LOG_TAG, "I Love U :) !");
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
