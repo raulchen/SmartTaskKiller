@@ -1,5 +1,7 @@
 package cn.ac.iscas.smarttaskmanager;
 
+import android.util.Log;
+
 import java.util.List;
 import java.util.Map;
 import cn.ac.iscas.smarttaskmanager.Record.TimeOfDay;  //这个不能自动引用么?
@@ -13,8 +15,11 @@ import cn.ac.iscas.smarttaskmanager.Record.TimeOfDay;  //这个不能自动引�
  */
 public class VictimSelector {
 
-    private static final double SCORE_LOWER_BOUND = 0.001;
+    private static final String LOG_TAG = VictimSelector.class.getSimpleName();
 
+    private static final double SCORE_LOWER_BOUND = 0.00001;
+
+    private static double historicalMinScore = 1.0;
 
     /**
      * P(A|D,T) = P(A,D,T) / P(D,T)
@@ -83,7 +88,11 @@ public class VictimSelector {
 
         String lastAppKey = preApp;
         double lastAppScore = computeCondProbability(app, lastAppKey, lastAppCnt);
-        if(lastAppScore == 0.0){
+        if(lastAppScore < historicalMinScore){
+            historicalMinScore = lastAppScore;
+            Log.i(LOG_TAG, String.format("new min score: %.4f", lastAppScore));
+        }
+        if(lastAppScore < SCORE_LOWER_BOUND){
             lastAppScore = SCORE_LOWER_BOUND;
         }
 
