@@ -54,14 +54,14 @@ public class VictimSelector {
 
 
     /**
-     * Compute conditional probabity such
+     * Compute conditional probability such
      * as P(A|A') or P(A|D,T).
      * @param app
      * @param key
      * @param cnt
      * @return
      */
-    public double computeCondProbabity(String app, String key, Map<String, Counter> cnt){
+    private double computeCondProbability(String app, String key, Map<String, Counter> cnt){
         Counter counter = cnt.get(key);
         if(counter == null){
             return 0.0;  //no concurrence for key
@@ -79,16 +79,16 @@ public class VictimSelector {
      * @param app
      * @return
      */
-    public double computeScore(String app, String preApp, TimeOfDay timeOfDay, String dayOfWeek){
+    private double computeScore(String app, String preApp, TimeOfDay timeOfDay, String dayOfWeek){
 
         String lastAppKey = preApp;
-        double lastAppScore = computeCondProbabity(app, lastAppKey, lastAppCnt);
+        double lastAppScore = computeCondProbability(app, lastAppKey, lastAppCnt);
         if(lastAppScore == 0.0){
             lastAppScore = SCORE_LOWER_BOUND;
         }
 
         String joinKey = joinString(dayOfWeek, timeOfDay);
-        double joinScore = computeCondProbabity(app, joinKey, jointCnt);
+        double joinScore = computeCondProbability(app, joinKey, jointCnt);
 
         return lastAppScore * joinScore;
 
