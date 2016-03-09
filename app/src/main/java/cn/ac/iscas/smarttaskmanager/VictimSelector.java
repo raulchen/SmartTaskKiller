@@ -6,12 +6,14 @@ import cn.ac.iscas.smarttaskmanager.Record.TimeOfDay;  //这个不能自动引�
 
 /**
  * Created by HWQ on 16/3/8.
- * When there is no enough memory,VictimSelector will
+ * When there is no enough memory, VictimSelector will
  * choose the app with lowest score which indicates the probability
  * that the given app will be launched in the near future from all the background
  * apps.
  */
 public class VictimSelector {
+
+    private static final double SCORE_LOWER_BOUND = 0.001;
 
 
     /**
@@ -22,12 +24,9 @@ public class VictimSelector {
 
     private Map<String, Counter> lastAppCnt;
 
-    private double minAcore;
-
-    public VictimSelector(Map<String, Counter> jointCnt, Map<String, Counter> lastAppCnt, double minAcore){
+    public VictimSelector(Map<String, Counter> jointCnt, Map<String, Counter> lastAppCnt){
         this.jointCnt = jointCnt;
         this.lastAppCnt = lastAppCnt;
-        this.minAcore = minAcore;
     }
 
     private static String joinString(String dayOfWeek, TimeOfDay timeOfDay){
@@ -85,7 +84,7 @@ public class VictimSelector {
         String lastAppKey = preApp;
         double lastAppScore = computeCondProbabity(app, lastAppKey, lastAppCnt);
         if(lastAppScore == 0.0){
-            lastAppScore = minAcore / 10;
+            lastAppScore = SCORE_LOWER_BOUND;
         }
 
         String joinKey = joinString(dayOfWeek, timeOfDay);
