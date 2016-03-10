@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,11 @@ public class TaskManagerRunnable implements Runnable {
     private Map<String, Counter> jointCnt = new HashMap<>();
 
     private Map<String, Counter> lastAppCnt = new HashMap<>();
+
+    private static final int WINDOW_SIZE = 7;
+
+    private List<Record> history = new LinkedList<>();
+
 
     public TaskManagerRunnable(ActivityManager am){
         this.am = am;
@@ -107,8 +113,81 @@ public class TaskManagerRunnable implements Runnable {
         return false;
     }
 
+    private boolean isOldHistory(Record first, Record current){
+        Long firstTime = first.time;
+        Long currentTime = current.time;
+        return (currentTime - firstTime) > 86400 * WINDOW_SIZE;
+    }
+
+    private void increase(Record record, String key, Map<String, Counter> cnt){
+        if(key != null){
+            Counter counter = cnt.get(key);
+            if(counter == null){
+                counter = new Counter();
+                cnt.put(key, counter);
+            }
+            Integer num = counter.appCnt.get(record.app);
+            if(num == null){
+                num = 0;
+            }
+            counter.appCnt.put(record.app, num+1);
+            counter.totalNum++;
+        }
+    }
+
+    private void increaseCounters(Record record){
+        String key = record.preApp;
+        increase(record, key, lastAppCnt);
+
+        String jointKey = VictimSelector.joinString(record.dayOfWeek, record.timeOfDay);
+        increase(record, jointKey, jointCnt);
+    }
+
+
+    private void decrease(Record record, String key, Map<String, Counter> cnt){
+        if(key != null){
+            Counter counter = cnt.get(key);
+            Integer num = counter.appCnt.get(record.app);
+            if(num == 1){
+                counter.appCnt.remove(record.app);
+            }else{
+                counter.appCnt.put(record.app, num-1);
+            }
+            if(counter.appCnt.size() == 0){
+                cnt.remove(key);
+            }
+            counter.totalNum--;
+        }
+    }
+
+
+    private void decreaseCounters(Record record){
+        String key = record.preApp;
+        decrease(record, key, lastAppCnt);
+
+        String jointKey = VictimSelector.joinString(record.dayOfWeek, record.timeOfDay);
+        decrease(record, jointKey, jointCnt);
+    }
+
+
+    /**
+     * Whenever there comes a new record, we need to insert the new record into
+     * history list and increase the counters. Meanwhile, we also need to remove
+     * records early than the given WINDOW_SIZE and decrease the counters.
+     * @param record
+     */
     private void updateCounters(Record record){
-        //todo 
+
+        increaseCounters(record);
+
+        history.add(record);
+
+        while(isOldHistory(history.get(0), record)) {
+            Record current = history.get(0);
+            decreaseCounters(current);
+            history.remove(0);
+        }
+
     }
 
     private static class RunningApps {

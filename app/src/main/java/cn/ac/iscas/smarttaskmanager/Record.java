@@ -24,6 +24,7 @@ public class Record {
     }
 
     String app;
+    Long time;
     TimeOfDay timeOfDay;
     String dayOfWeek;
     String preApp;

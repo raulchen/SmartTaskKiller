@@ -34,7 +34,7 @@ public class VictimSelector {
         this.lastAppCnt = lastAppCnt;
     }
 
-    private static String joinString(String dayOfWeek, TimeOfDay timeOfDay){
+    public static String joinString(String dayOfWeek, TimeOfDay timeOfDay){
         return dayOfWeek + "," + timeOfDay;
     }
 

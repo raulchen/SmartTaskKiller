@@ -11,7 +11,7 @@ public class Counter {
     int totalNum;
 
     /**
-     * map from a given app to the times that the app appear
+     * map from a given app to the times that the app appears
      * together with the corresponding key of Counter.
      */
     HashMap<String, Integer> appCnt;
