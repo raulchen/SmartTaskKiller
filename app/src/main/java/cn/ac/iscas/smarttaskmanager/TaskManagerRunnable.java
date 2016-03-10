@@ -4,6 +4,9 @@ import android.app.ActivityManager;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,24 +19,23 @@ public class TaskManagerRunnable implements Runnable {
 
     private static final String LOG_TAG = TaskManagerRunnable.class.getSimpleName();
 
-    private static final int CHECK_INTERVAL = 10000;
+    private static final int CHECK_INTERVAL = 3000;
 
-    private static final double LOW_MEMORY_THRESHOLD_RATIO = 1.1;
+    private static final double LOW_MEMORY_THRESHOLD_RATIO = 7;
 
     private ActivityManager am;
 
-    private RunningApps preRunningApps = null;
-
     private RunningApps currentRunningApps = null;
+
+    private Record lastestRecord = null;
 
     private Map<String, Counter> jointCnt = new HashMap<>();
 
     private Map<String, Counter> lastAppCnt = new HashMap<>();
 
-    private static final int WINDOW_SIZE = 7;
+    private static final long WINDOW_SIZE = 7 * 24 * 60 * 60;
 
     private List<Record> history = new LinkedList<>();
-
 
     public TaskManagerRunnable(ActivityManager am){
         this.am = am;
@@ -54,13 +56,28 @@ public class TaskManagerRunnable implements Runnable {
 
     private void work(){
         try {
-            checkRunningApps();
+            RunningApps ra = getRunningApps();
+            if(!skipApp(ra.foreground) && !ra.equals(currentRunningApps)){
+                String preApp = currentRunningApps == null? null : currentRunningApps.foreground;
+                currentRunningApps = ra;
+                Log.d(LOG_TAG, "new record: " + preApp + " -> " + currentRunningApps.foreground);
+                lastestRecord = new Record(currentRunningApps.foreground, preApp, System.currentTimeMillis());
+                updateCounters(lastestRecord);
+            }
             if(checkMemoryUsage()){
-                //kill()
+                List<String> inMemory = getRunningApps().inMemory;
+                Log.d(LOG_TAG, inMemory.toString());
+                String victim = new VictimSelector(jointCnt, lastAppCnt).getVictimApp(inMemory, lastestRecord);
+                Log.i(LOG_TAG, "gonna kill " + victim);
+                kill(victim);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "Unknown error", e);
         }
+    }
+
+    private void kill(String victim) {
+        am.killBackgroundProcesses(victim);
     }
 
     /**
@@ -70,38 +87,30 @@ public class TaskManagerRunnable implements Runnable {
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
         this.am.getMemoryInfo(memoryInfo);
         //TODO save
-        Log.d(LOG_TAG, String.format("Available: %d, Threshold: %d", memoryInfo.availMem, memoryInfo.threshold));
+        Log.d(LOG_TAG, String.format("Available: %d, Threshold: %d", memoryInfo.availMem, (int)(memoryInfo.threshold * LOW_MEMORY_THRESHOLD_RATIO)));
         return memoryInfo.availMem < memoryInfo.threshold * LOW_MEMORY_THRESHOLD_RATIO;
     }
 
-    private void checkRunningApps(){
+    private RunningApps getRunningApps(){
         List<ActivityManager.RunningAppProcessInfo> infos = this.am.getRunningAppProcesses();
         if(infos == null || infos.isEmpty()){
-            return;
+            throw new RuntimeException("Cannot getRunningAppProcesses");
         }
         RunningApps ra = new RunningApps();
         ra.foreground = infos.get(0).processName;
-        if(skipApp(ra.foreground)){
-            return;
-        }
         for(ActivityManager.RunningAppProcessInfo info : infos){
-//            if(isService(info.processName)){
-//                continue;
-//            }
-            Log.d(LOG_TAG, info.processName + ", " + info.importance);
+            if(skipApp(info.processName)){
+                continue;
+            }
             if(!info.processName.equals(ra.foreground)){
                 ra.inMemory.add(info.processName);
             }
         }
-
-        if(!ra.equals(currentRunningApps)){
-            preRunningApps = currentRunningApps;
-            currentRunningApps = ra;
-        }
+        return ra;
     }
 
     private boolean skipApp(String app){
-        return app.toLowerCase().contains("launcher");
+        return app.toLowerCase().contains("launcher") || isService(app);
     }
 
     private boolean isService(String processName){
@@ -114,9 +123,9 @@ public class TaskManagerRunnable implements Runnable {
     }
 
     private boolean isOldHistory(Record first, Record current){
-        Long firstTime = first.time;
-        Long currentTime = current.time;
-        return (currentTime - firstTime) > 86400 * WINDOW_SIZE;
+        long firstTime = first.time;
+        long currentTime = current.time;
+        return (currentTime - firstTime) > WINDOW_SIZE;
     }
 
     private void increase(Record record, String key, Map<String, Counter> cnt){
@@ -187,7 +196,6 @@ public class TaskManagerRunnable implements Runnable {
             decreaseCounters(current);
             history.remove(0);
         }
-
     }
 
     private static class RunningApps {
@@ -196,6 +204,9 @@ public class TaskManagerRunnable implements Runnable {
 
         @Override
         public boolean equals(Object o) {
+            if(o == null || !(o instanceof RunningApps)){
+                return false;
+            }
             RunningApps that = (RunningApps)o;
             return this.foreground.equals(that.foreground) && this.inMemory.equals(that.inMemory);
         }

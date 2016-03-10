@@ -19,7 +19,7 @@ public class VictimSelector {
 
     private static final double SCORE_LOWER_BOUND = 0.00001;
 
-    private static double historicalMinScore = 1.0;
+    private static double historicalMinScore = Double.MAX_VALUE;
 
     /**
      * P(A|D,T) = P(A,D,T) / P(D,T)
@@ -45,8 +45,11 @@ public class VictimSelector {
      * @return name of victim app
      */
     public String getVictimApp(List<String> inMemoryApps, Record record){
+        if(record == null){
+            return inMemoryApps.get(inMemoryApps.size() - 1);
+        }
         String victim = null;
-        double minScore = Double.MIN_VALUE;
+        double minScore = Double.MAX_VALUE;
         for(String app : inMemoryApps){
             double score = computeScore(app, record.app, record.timeOfDay, record.dayOfWeek);
             if(score < minScore){
@@ -88,7 +91,7 @@ public class VictimSelector {
 
         String lastAppKey = preApp;
         double lastAppScore = computeCondProbability(app, lastAppKey, lastAppCnt);
-        if(lastAppScore < historicalMinScore){
+        if(lastAppScore > 0 && lastAppScore < historicalMinScore){
             historicalMinScore = lastAppScore;
             Log.i(LOG_TAG, String.format("new min score: %.4f", lastAppScore));
         }

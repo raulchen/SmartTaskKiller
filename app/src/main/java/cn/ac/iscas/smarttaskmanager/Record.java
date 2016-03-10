@@ -1,12 +1,14 @@
 package cn.ac.iscas.smarttaskmanager;
 
 
+import java.util.Date;
+
 /**
  * Created by HWQ on 16/3/8.
  */
 public class Record {
 
-    static enum TimeOfDay{
+    enum TimeOfDay{
 
         MORNING,
         AFTERNOON,
@@ -24,24 +26,26 @@ public class Record {
     }
 
     String app;
-    Long time;
+    long time;
     TimeOfDay timeOfDay;
     String dayOfWeek;
     String preApp;
 
-    private static String isWeekDay(String day){
-        if(day.equals("SATURDAY") || day.equals("SUNDAY")){
+    private static String isWeekDay(Date date){
+        if(date.getDay() >= 5){
             return "Weekends";
         }
         return "Weekdays";
     }
 
-    public Record(String app, int hour, String day, String preApp){
+    public Record(String app, String preApp, long time){
         super();
         this.app = app;
-        this.timeOfDay = TimeOfDay.of(hour);
-        this.dayOfWeek = isWeekDay(day);
         this.preApp = preApp;
+        this.time = time;
+        Date date = new Date(time);
+        this.timeOfDay = TimeOfDay.of(date.getHours());
+        this.dayOfWeek = isWeekDay(date);
     }
 
 }
