@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_running_apps"
+            android:title="Running apps" />
+        <item
+            android:id="@+id/nav_killing_history"
+            android:title="Killing history" />
+        <item
+            android:id="@+id/nav_mem_monitor"
+            android:title="Memory monitor" />
+    </group>
+
+</menu>
