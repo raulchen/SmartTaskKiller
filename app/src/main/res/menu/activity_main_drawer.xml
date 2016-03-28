@@ -4,12 +4,15 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_running_apps"
+            android:icon="@drawable/icon1"
             android:title="Running apps" />
         <item
             android:id="@+id/nav_killing_history"
+            android:icon="@drawable/icon2"
             android:title="Killing history" />
         <item
             android:id="@+id/nav_mem_monitor"
+            android:icon="@drawable/icon3"
             android:title="Memory monitor" />
     </group>
 
