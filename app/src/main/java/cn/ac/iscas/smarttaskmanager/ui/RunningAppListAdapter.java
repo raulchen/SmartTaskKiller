@@ -15,9 +15,9 @@ import cn.ac.iscas.smarttaskmanager.R;
 /**
  * Created by chenh on 3/27/16.
  */
-public class AppListAdapter extends ArrayAdapter<AppDisplayInfo> {
+public class RunningAppListAdapter extends ArrayAdapter<AppDisplayInfo> {
 
-    public AppListAdapter(Context context, List<AppDisplayInfo> objects) {
+    public RunningAppListAdapter(Context context, List<AppDisplayInfo> objects) {
         super(context, 0, objects);
     }
 
@@ -25,7 +25,7 @@ public class AppListAdapter extends ArrayAdapter<AppDisplayInfo> {
     public View getView(int position, View convertView, ViewGroup parent) {
         AppDisplayInfo info = getItem(position);
         if(convertView == null){
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item, parent, false);
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.running_app_list_item, parent, false);
         }
         ImageView iconView = (ImageView) convertView.findViewById(R.id.app_icon);
         TextView nameView = (TextView) convertView.findViewById(R.id.app_name);

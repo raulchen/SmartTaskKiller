@@ -1,6 +1,5 @@
 package cn.ac.iscas.smarttaskmanager.ui;
 
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
@@ -15,37 +14,39 @@ import java.util.Map;
 public class AppDisplayInfo {
 
     private static Map<String, AppDisplayInfo> cache = new HashMap<>();
-    private static AppDisplayInfo none = new AppDisplayInfo(null, null, null);
     private static final String LOG_TAG = AppDisplayInfo.class.getName();
 
     public final Drawable icon;
     public final String label;
     public final String processName;
+    public final Long time;
 
-    private AppDisplayInfo(Drawable icon, String label, String processName) {
+    private AppDisplayInfo(Drawable icon, String label, String processName, Long time) {
         this.icon = icon;
         this.label = label;
         this.processName = processName;
+        this.time = time;
     }
 
-    public static AppDisplayInfo create(String processName, PackageManager pm){
-        AppDisplayInfo info = cache.get(processName);
-        if(info == null) {
-            ApplicationInfo appInfo = null;
-            try {
-                appInfo = pm.getApplicationInfo(
-                        processName,
-                        PackageManager.GET_META_DATA);
-                info = new AppDisplayInfo(
-                        appInfo.loadIcon(pm),
-                        appInfo.loadLabel(pm).toString(),
-                        processName);
-            } catch (PackageManager.NameNotFoundException e) {
-                Log.w(LOG_TAG, "failed to load ApplicationInfo from " + processName);
-                info = none;
-            }
-            cache.put(processName, info);
+    public static AppDisplayInfo createForRunningAppView(
+            PackageManager pm, String processName){
+        return createForKillingHistoryView(pm, processName, null);
+    }
+
+    public static AppDisplayInfo createForKillingHistoryView(
+            PackageManager pm,String processName, Long time){
+        try {
+            ApplicationInfo appInfo = pm.getApplicationInfo(
+                    processName,
+                    PackageManager.GET_META_DATA);
+            return new AppDisplayInfo(
+                    appInfo.loadIcon(pm),
+                    appInfo.loadLabel(pm).toString(),
+                    processName,
+                    time);
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.w(LOG_TAG, "failed to load ApplicationInfo from " + processName);
+            return null;
         }
-        return info == none? null: info;
     }
 }

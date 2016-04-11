@@ -14,6 +14,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
 import cn.ac.iscas.smarttaskmanager.ui.KillingHistoryFragment;
+import cn.ac.iscas.smarttaskmanager.ui.MemMonitorFragment;
 import cn.ac.iscas.smarttaskmanager.ui.RunningAppsFragment;
 
 public class MainActivity extends AppCompatActivity
@@ -46,9 +47,10 @@ public class MainActivity extends AppCompatActivity
 
         fragments = new Fragment[]{
                 new RunningAppsFragment(),
-                new KillingHistoryFragment()
+                new KillingHistoryFragment(),
+                new MemMonitorFragment()
         };
-        selectedFragment = 0;
+        selectedFragment = 2;
         updateFragment();
 
         Intent i = new Intent(this, MainService.class);
